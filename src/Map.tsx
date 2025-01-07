@@ -3,22 +3,26 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import TileLayerWebGl from 'ol/layer/WebGLTile';
+import Draw from 'ol/interaction/Draw.js';
 import { XYZ } from 'ol/source';
 import 'ol/ol.css';
 import { fromLonLat, get } from 'ol/proj';
 import { OSM } from 'ol/source';
 import { TileGrid } from 'ol/tilegrid';
-// import 'ol/ol.css';
-// import 'ol-ext/dist/ol-ext.css';
-// import {useScript} from './useScript'
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 
-// import {} from 'ol-ext/util'
-//ol.ext.getElevationFromPixel
+
 const OLMapWithLocalTiles = (props: {epsg: string, y: string}) => {
   const [mapState, setMap] = useState<Map>();
     const [level, setLevel] = useState<number>(0);
     const [dtmHeight, setDtmHeight] = useState<number>(0)
     const [labelLocation, setLabelLocation] = useState<[number, number]>([0,0])
+    const source = new VectorSource({wrapX: false});
+    const vector = new VectorLayer({
+      source: source,
+    });
+    
   const elevation = [
     '+',
     -10000,
@@ -56,7 +60,8 @@ const OLMapWithLocalTiles = (props: {epsg: string, y: string}) => {
           new TileLayer({
               source: new OSM(),  // OpenStreetMap source
             }),
-            layer
+            layer,
+            vector
 ],
 view: new View({
         center: [35.000000, 32.000000],
@@ -69,6 +74,14 @@ view: new View({
     });
 
     map.on('click', (e)=>console.log(map.getView().getZoom()))
+    const value = 'Point';
+    if (value !== 'None') {
+      const draw = new Draw({
+        source: source,
+        type: value,
+      });
+      map.addInteraction(draw);
+    }
     setMap(map);
     window.map = map
     return () => map.setTarget(null); // Clean up on unmount
